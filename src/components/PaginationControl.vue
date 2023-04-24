@@ -1,46 +1,30 @@
 <template>
     <ul class="catalog__pagination pagination">
         <li class="pagination__item">
-          <a class="pagination__link pagination__link--arrow pagination__link--disabled"
-             aria-label="Предыдущая страница">
+          <a class="pagination__link pagination__link--arrow"
+             :class="{'pagination__link--disabled' : current < 2}"
+             aria-label="Предыдущая страница"
+             :href="current < 2 ? false : '#'"
+             @click.prevent="prev">
             <svg width="8" height="14" fill="currentColor">
               <use xlink:href="#icon-arrow-left"></use>
             </svg>
           </a>
         </li>
-        <li class="pagination__item">
-          <a class="pagination__link pagination__link--current">
-            1
+        <li class="pagination__item" v-for="page in pages" :key="page">
+          <a class="pagination__link"  :href="page != current"
+             :class="{'pagination__link--current' : page == current }"
+             @click.prevent="changePage(page)">
+            {{ page }}
           </a>
         </li>
         <li class="pagination__item">
-          <a class="pagination__link" href="#">
-            2
-          </a>
-        </li>
-        <li class="pagination__item">
-          <a class="pagination__link" href="#">
-            3
-          </a>
-        </li>
-        <li class="pagination__item">
-          <a class="pagination__link" href="#">
-            4
-          </a>
-        </li>
-        <li class="pagination__item">
-          <a class="pagination__link" href="#">
-            ...
-          </a>
-        </li>
-        <li class="pagination__item">
-          <a class="pagination__link" href="#">
-            10
-          </a>
-        </li>
-        <li class="pagination__item">
-          <a class="pagination__link pagination__link--arrow" href="#"
-             aria-label="Следующая страница">
+          <a class="pagination__link pagination__link--arrow"
+             :class="{'pagination__link--disabled' : current + 1 >= pages}"
+             :href="current + 1 >= pages ? false : '#'"
+             aria-label="Следующая страница"
+             @click.prevent="next"
+             >
             <svg width="8" height="14" fill="currentColor">
               <use xlink:href="#icon-arrow-right"></use>
             </svg>
@@ -48,3 +32,19 @@
         </li>
     </ul>
 </template>
+<script>
+export default {
+  props: ['pages', 'current'],
+  methods: {
+    changePage(page) {
+      this.$store.commit('changePage', page);
+    },
+    prev() {
+      this.$store.commit('changePage', this.current - 1);
+    },
+    next() {
+      this.$store.commit('changePage', this.current + 1);
+    },
+  },
+};
+</script>

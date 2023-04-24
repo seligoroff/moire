@@ -1,13 +1,13 @@
 <template>
-    <form class="filter__form form" action="#" method="get">
+    <form class="filter__form form" action="#" method="get" @submit.prevent="filterProducts">
         <fieldset class="form__block">
           <legend class="form__legend">Цена</legend>
           <label class="form__label form__label--price" for="minPrice">
-            <input class="form__input" type="text" name="min-price" value="0" >
+            <input class="form__input" type="text" v-model.number="filters.minPrice">
             <span class="form__value">От</span>
           </label>
           <label class="form__label form__label--price" for="maxPrice">
-            <input class="form__input" type="text" name="max-price" value="12345" >
+            <input class="form__input" type="text" v-model.number="filters.maxPrice" >
             <span class="form__value">До</span>
           </label>
         </fieldset>
@@ -15,24 +15,26 @@
         <fieldset class="form__block">
           <legend class="form__legend">Категория</legend>
           <label class="form__label form__label--select" for="category">
-            <select class="form__select" type="text" name="category" >
-              <option value="value1">Все категории</option>
-              <option value="value2">Футболки</option>
-              <option value="value3">Бюстгалтеры</option>
-              <option value="value4">Носки</option>
+            <select class="form__select" type="text" v-model="filters.categoryId" >
+              <option value="">Все категории</option>
+              <option :value="category.id" v-for="category in categories"
+                    :key="category.id" >{{ category.title }}</option>
             </select>
           </label>
         </fieldset>
-
-        <fieldset class="form__block">
+        <fieldset class="form__block" v-if="materials">
           <legend class="form__legend">Материал</legend>
           <ul class="check-list">
-            <li class="check-list__item">
-              <label class="check-list__label" for="material">
-    <input class="check-list__check sr-only" type="checkbox" name="material" value="лен">
+            <li class="check-list__item" v-for="material in materials" :key="material.id">
+              <label class="check-list__label" for="material"
+                   @click.prevent="checkMaterial(material.id)"
+                   @keyup.space="checkMaterial(material.id)">
+    <input class="check-list__check sr-only" type="checkbox"
+           v-model="filters.materialIds" :value="material.id"
+           >
                 <span class="check-list__desc">
-                  лен
-                  <span>(3)</span>
+                  {{ material.title }}
+                  <span>({{ material.productsCount }})</span>
                 </span>
               </label>
             </li>
@@ -42,13 +44,15 @@
         <fieldset class="form__block">
           <legend class="form__legend">Коллекция</legend>
           <ul class="check-list">
-            <li class="check-list__item">
-              <label class="check-list__label" for="collection">
+            <li class="check-list__item" v-for="season in seasons" :key="season.id">
+              <label class="check-list__label" for="collection"
+                    @click.prevent="checkSeason(season.id)"
+                    @keyup.space="checkSeason(season.id)">
     <input class="check-list__check sr-only"
-           type="checkbox" name="collection" value="лето" checked="">
+           type="checkbox" v-model="filters.seasonIds" :value="season.id">
                 <span class="check-list__desc">
-                  лето
-                  <span>(2)</span>
+                  {{ season.title }}
+                  <span>({{ season.productsCount }})</span>
                 </span>
               </label>
             </li>
@@ -58,8 +62,67 @@
         <button class="filter__submit button button--primery" type="submit">
           Применить
         </button>
-        <button class="filter__reset button button--second" type="button">
+        <button class="filter__reset button button--second" type="button" @click.prevent="reset">
           Сбросить
         </button>
     </form>
 </template>
+<script>
+export default {
+  data() {
+    return {
+      filters: {
+        minPrice: 0,
+        maxPrice: 0,
+        categoryId: '',
+        materialIds: [],
+        seasonIds: [],
+      },
+    };
+  },
+  computed: {
+    seasons() {
+      return this.$store.state.seasons;
+    },
+    materials() {
+      return this.$store.state.materials;
+    },
+    categories() {
+      return this.$store.state.categories;
+    },
+  },
+  methods: {
+    checkMaterial(value) {
+      if (this.filters.materialIds.includes(value)) {
+        this.filters.materialIds = this.filters.materialIds.filter((item) => item !== value);
+      } else {
+        this.filters.materialIds.push(value);
+      }
+    },
+    checkSeason(value) {
+      if (this.filters.seasonIds.includes(value)) {
+        this.filters.seasonIds = this.filters.seasonIds.filter((item) => item !== value);
+      } else {
+        this.filters.seasonIds.push(value);
+      }
+    },
+    filterProducts() {
+      this.$store.commit('changeFilters', this.filters);
+      this.$store.dispatch('loadProducts');
+    },
+    reset() {
+      this.filters.minPrice = 0;
+      this.filters.maxPrice = 0;
+      this.filters.categoryId = '';
+      this.filters.materialIds = [];
+      this.filters.seasonIds = [];
+      this.filterProducts();
+    },
+  },
+  created() {
+    this.$store.dispatch('loadSeasons');
+    this.$store.dispatch('loadMaterials');
+    this.$store.dispatch('loadProductCategories');
+  },
+};
+</script>

@@ -7,7 +7,7 @@
           Каталог
         </h1>
         <span class="content__info">
-          152 товара
+          {{ this.$store.state.totalCount }} товара
         </span>
       </div>
     </div>
@@ -16,35 +16,12 @@
         <aside class="filter">
             <form-filter></form-filter>
         </aside>
+        <section class="catalog">
+            <products-list :products="products"></products-list>
 
-      <section class="catalog">
-        <ul class="catalog__list">
-          <li class="catalog__item">
-            <a class="catalog__pic" href="#">
-              <img src="img/product-1.jpg" srcset="img/product-1@2x.jpg 2x" alt="Название товара">
-            </a>
-
-            <h3 class="catalog__title">
-              <a href="#">Кружевной бюстгалтер без косточек</a>
-            </h3>
-
-            <span class="catalog__price">
-              3 690 ₽
-            </span>
-
-            <ul class="colors colors--black">
-              <li class="colors__item">
-                <label class="colors__label" for="color-1">
-       <input class="colors__radio sr-only" type="radio" name="color-1"  value="#73B6EA" checked="">
-                  <span class="colors__value" style="background-color: #73B6EA;">
-                  </span>
-                </label>
-              </li>
-            </ul>
-          </li>
-        </ul>
-        <pagination-control></pagination-control>
-      </section>
+            <pagination-control :current="currentPage" :pages="pages"
+                v-if="pages > 1"></pagination-control>
+         </section>
     </div>
   </main>
 
@@ -53,16 +30,35 @@
 <script>
 import FormFilter from '@/components/FormFilter.vue';
 import PaginationControl from '@/components/PaginationControl.vue';
+import ProductsList from '@/components/ProductsList.vue';
 
 export default {
   data() {
-    return {
-      test: false,
-    };
+    return {};
   },
   components: {
     FormFilter,
     PaginationControl,
+    ProductsList,
+  },
+  computed: {
+    products() {
+      return this.$store.state.productsData;
+    },
+    currentPage: {
+      get() {
+        return this.$store.state.currentPage;
+      },
+      set(page) {
+        this.$store.commit('changePage', page);
+      },
+    },
+    pages() {
+      return this.$store.state.totalPages;
+    },
+  },
+  created() {
+    this.$store.dispatch('loadProducts');
   },
 };
 </script>
