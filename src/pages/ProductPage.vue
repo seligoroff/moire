@@ -58,7 +58,7 @@
 
                   <label for="count"><input type="text" v-model="amount"></label>
 
-                <button type="button" aria-label="Добавить один товар" @click.prevent="addToCart">
+                <button type="button" aria-label="Добавить один товар" @click.prevent="add">
                   <svg width="12" height="12" fill="currentColor">
                     <use xlink:href="#icon-plus"></use>
                   </svg>
