@@ -12,7 +12,9 @@
           </label>
         </fieldset>
 
-        <fieldset class="form__block">
+        <p v-if="loadingCategories">Загрузка категорий...</p>
+        <p v-else-if="loadingCategoriesError">Ошибка загрузки! {{ loadingCategoriesError }}</p>
+        <fieldset class="form__block" v-else>
           <legend class="form__legend">Категория</legend>
           <label class="form__label form__label--select" for="category">
             <select class="form__select" type="text" v-model="filters.categoryId" >
@@ -22,7 +24,9 @@
             </select>
           </label>
         </fieldset>
-        <fieldset class="form__block" v-if="materials">
+        <p v-if="loadingMaterials">Загрука материалов...</p>
+        <p v-else-if="loadingMaterialsError">Ошибка загрузки! {{ loadingMaterialsError }}</p>
+        <fieldset class="form__block" v-else>
           <legend class="form__legend">Материал</legend>
           <ul class="check-list">
             <li class="check-list__item" v-for="material in materials" :key="material.id">
@@ -41,7 +45,9 @@
           </ul>
         </fieldset>
 
-        <fieldset class="form__block">
+        <p v-if="loadingSeasons">Загрука коллекций...</p>
+        <p v-else-if="loadingSeasonsError">Ошибка загрузки! {{ loadingSeasonsError }}</p>
+        <fieldset class="form__block" v-else >
           <legend class="form__legend">Коллекция</legend>
           <ul class="check-list">
             <li class="check-list__item" v-for="season in seasons" :key="season.id">
@@ -89,6 +95,24 @@ export default {
     },
     categories() {
       return this.$store.state.categories;
+    },
+    loadingCategories() {
+      return this.$store.state.loadingCategories;
+    },
+    loadingCategoriesError() {
+      return this.$store.state.loadingCategoriesError;
+    },
+    loadingSeasons() {
+      return this.$store.state.loadingSeasons;
+    },
+    loadingSeasonsError() {
+      return this.$store.state.loadingSeasonsError;
+    },
+    loadingMaterials() {
+      return this.$store.state.loadingMaterials;
+    },
+    loadingMaterialsError() {
+      return this.$store.state.loadingMaterialsError;
     },
   },
   methods: {

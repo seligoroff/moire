@@ -19,7 +19,7 @@
           Корзина
         </h1>
         <span class="content__info">
-          3 товара
+          {{ items.length }} товара
         </span>
       </div>
     </div>
@@ -42,9 +42,10 @@
             Итого: <span>{{totalPrice | numberFormat}} ₽</span>
           </p>
 
-          <button class="cart__button button button--primery" type="submit">
+          <router-link tag="button" class="cart__button button button--primery"
+                type="submit" :to="{name: 'order'}">
             Оформить заказ
-          </button>
+          </router-link>
         </div>
       </form>
     </section>

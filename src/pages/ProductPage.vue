@@ -19,15 +19,16 @@
         </li>
       </ul>
     </div>
-
-    <section class="item" v-if="product">
+    <p v-if="loadingProduct">Загузка...</p>
+    <p v-else-if="loadingProductError">Ошибка! {{ loadingProductError }}</p>
+    <section class="item" v-else-if="product" >
       <div class="item__pics pics">
         <div class="pics__wrapper">
           <img :src="currentProductData.gallery[0].file.url"
                :alt="product.title" v-if="currentProductData.gallery">
           <placeholder-image :title="product.title" v-else></placeholder-image>
         </div>
-        <ul class="pics__list">
+        <ul class="pics__list" v-show="false">
           <li class="pics__item">
             <a href="" class="pics__link pics__link--current">
               <img width="98" height="98" src="img/product-square-2.jpg" alt="Название товара">
@@ -122,23 +123,7 @@
         </ul>
 
         <div class="item__content">
-          <h3>Состав:</h3>
-
-          <p>
-            60% хлопок<br>
-            30% полиэстер<br>
-          </p>
-
-          <h3>Уход:</h3>
-
-          <p>
-            Машинная стирка при макс. 30ºC короткий отжим<br>
-            Гладить при макс. 110ºC<br>
-            Не использовать машинную сушку<br>
-            Отбеливать запрещено<br>
-            Не подвергать химчистке<br>
-          </p>
-
+            {{ product.content }}
         </div>
       </div>
     </section>
@@ -148,11 +133,13 @@
 import axios from 'axios';
 import numberFormat from '@/helpers/numberFormat';
 import PlaceholderImage from '@/components/PlaceholderImage.vue';
-import { API_BASE_URL } from '@/config';
+import { API_BASE_URL, DEFAULT_API_TIMEOUT_LIMIT } from '@/config';
 
 export default {
   data() {
     return {
+      loadingProduct: false,
+      loadingProductError: '',
       product: null,
       currentColor: null,
       currentProductData: null,
@@ -171,15 +158,23 @@ export default {
       this.$store.dispatch('addProductToCart', data);
     },
     setProduct(product) {
-      console.log(product);
       this.product = product;
       [this.currentProductData] = product.colors;
       this.currentColor = product.colors[0].color.id;
       this.currentSize = this.product.sizes[0].id;
     },
     loadProduct() {
-      axios.get(`${API_BASE_URL}/api/products/${this.$route.params.slug}`)
-        .then((response) => this.setProduct(response.data));
+      this.loadingProduct = true;
+      const req = () => axios.get(`${API_BASE_URL}/api/products/${this.$route.params.slug}`)
+        .then((response) => {
+          this.setProduct(response.data);
+          this.loadingProduct = false;
+          this.loadingProductError = '';
+        }).catch((e) => {
+          this.loadingProduct = false;
+          this.loadingProductError = e.message;
+        });
+      setTimeout(req, DEFAULT_API_TIMEOUT_LIMIT);
     },
     changeColor(color) {
       console.log(color);

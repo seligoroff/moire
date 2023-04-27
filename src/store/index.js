@@ -7,6 +7,14 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
+    loadingMaterials: false,
+    loadingMaterialsError: '',
+    loadingSeasons: false,
+    loadingSeasonsError: '',
+    loadingCategories: false,
+    loadingCategoriesError: '',
+    loadingProducts: false,
+    loadingProductsError: '',
     cartProducts: [],
     cartProductsData: [],
     productsData: [],
@@ -16,6 +24,11 @@ export default new Vuex.Store({
     seasons: [],
     materials: [],
     categories: [],
+    deliveries: [],
+    deliveryMethod: null,
+    payments: [],
+    paymentMethod: null,
+    orderInfo: {},
     filters: {},
   },
   getters: {
@@ -51,29 +64,88 @@ export default new Vuex.Store({
       state.cartProducts = [];
       state.cartProductsData = [];
     },
-    updateCartAmount(state, { productId, amount }) {
-      const item = state.cartProducts.find((i) => i.productId === productId);
-      if (item) {
-        item.amount = amount;
-      }
-    },
     updateUserAccessKey(state, accessKey) {
       state.userAccessKey = accessKey;
     },
     updateCartProductData(state, items) {
-      console.log(['updateCartProductData', items]);
       state.cartProductsData = items;
     },
     syncCartProducts(state) {
       state.cartProducts = state.cartProductsData.map((item) => (
         {
           productId: item.product.id,
-          amount: item.quantity,
+          quantity: item.quantity,
+          colorId: item.color.color.id,
+          sizeId: item.size.id,
         }
       ));
     },
+    changeLoadingProductStatus(state) {
+      state.loadingProducts = !state.loadingProducts;
+    },
+    setLoadingProductsError(state, message) {
+      state.loadingProductsError = message;
+    },
+    changeLoadingCategories(state) {
+      state.loadingCategories = !state.loadingCategories;
+    },
+    setLoadingCategoriesError(state, message) {
+      state.loadingCategoriesError = message;
+    },
+    changeLoadingSeasons(state) {
+      state.loadingSeasons = !state.loadingSeasons;
+    },
+    setLoadingSeasonsError(state, message) {
+      state.loadingSeasonsError = message;
+    },
+    changeLoadingMaterials(state) {
+      state.loadingMaterials = !state.loadingMaterials;
+    },
+    setLoadingMaterialsError(state, message) {
+      state.loadingMaterialsError = message;
+    },
+    setDeliveries(state, items) {
+      state.deliveries = items;
+      state.deliveryMethod = items[0].id;
+    },
+    setDeliveryMethod(state, methodId) {
+      state.deliveryMethod = methodId;
+    },
+    setPayments(state, items) {
+      state.payments = items;
+      state.paymentMethod = items[0].id;
+    },
+    setPaymentMethod(state, methodId) {
+      state.paymentMethod = methodId;
+    },
   },
   actions: {
+    removeCartItem(context, cartItemId) {
+      const req = () => axios.delete(
+        `${API_BASE_URL}/api/baskets/products?userAccessKey=${context.state.userAccessKey}`,
+        {
+          data: {
+            basketItemId: cartItemId,
+          },
+        },
+      ).then((response) => {
+        context.commit('updateCartProductData', response.data.items);
+        context.commit('syncCartProducts');
+      });
+      setTimeout(req);
+    },
+    updateCartItemAmount(context, { cartItem, quantity }) {
+      const req = () => axios.put(`${API_BASE_URL}/api/baskets/products?userAccessKey=${context.state.userAccessKey}`, {
+        basketItemId: cartItem.id,
+        quantity,
+      }).then((response) => {
+        console.log(response);
+        context.commit('updateCartProductData', response.data.items);
+        context.commit('syncCartProducts');
+      });
+
+      setTimeout(req);
+    },
     addProductToCart(
       context,
       {
@@ -112,41 +184,96 @@ export default new Vuex.Store({
         });
     },
     loadProducts(context) {
+      context.commit('changeLoadingProductStatus');
       const queryParams = {
         ...context.state.filters,
         page: context.state.currentPage,
         limit: PRODUCTS_PER_PAGE,
       };
-
-      return setTimeout(
-        () => axios.get(
-          `${API_BASE_URL}/api/products`,
-          { params: queryParams },
-        )
-          .then((response) => context.commit('init', response.data)),
-        DEFAULT_API_TIMEOUT_LIMIT,
-      );
+      const query = () => axios.get(
+        `${API_BASE_URL}/api/products`,
+        { params: queryParams },
+      )
+        .then((response) => context.commit('init', response.data))
+        .then(() => {
+          context.commit('changeLoadingProductStatus');
+          context.commit('setLoadingProductsError', '');
+        })
+        .catch((e) => {
+          context.commit('changeLoadingProductStatus');
+          context.commit('setLoadingProductsError', e.message);
+        });
+      setTimeout(query, DEFAULT_API_TIMEOUT_LIMIT);
+      return query;
     },
     loadMaterials(context) {
-      return setTimeout(
-        () => axios.get(`${API_BASE_URL}/api/materials`)
-          .then((response) => context.commit('changeMaterialsList', response.data.items)),
-        DEFAULT_API_TIMEOUT_LIMIT,
-      );
+      context.commit('changeLoadingMaterials');
+      const query = () => axios.get(`${API_BASE_URL}/api/materials`)
+        .then((response) => {
+          context.commit('changeLoadingMaterials');
+          context.commit('setLoadingMaterialsError', '');
+          context.commit('changeMaterialsList', response.data.items);
+        }).catch((e) => {
+          context.commit('changeLoadingMaterials');
+          context.commit('setLoadingMaterialsError', e.message);
+        });
+      setTimeout(query, DEFAULT_API_TIMEOUT_LIMIT);
+      return query;
     },
     loadSeasons(context) {
-      return setTimeout(
-        () => axios.get(`${API_BASE_URL}/api/seasons`)
-          .then((response) => context.commit('changeSeasonsList', response.data.items)),
-        DEFAULT_API_TIMEOUT_LIMIT,
-      );
+      context.commit('changeLoadingSeasons');
+      const query = () => axios.get(`${API_BASE_URL}/api/seasons`)
+        .then((response) => {
+          context.commit('changeLoadingSeasons');
+          context.commit('setLoadingSeasonsError', '');
+          context.commit('changeSeasonsList', response.data.items);
+        }).catch((e) => {
+          context.commit('changeLoadingSeasons');
+          context.commit('setLoadingSeasonsError', e.message);
+        });
+      setTimeout(query, DEFAULT_API_TIMEOUT_LIMIT);
+      return query;
     },
     loadProductCategories(context) {
-      return setTimeout(
-        () => axios.get(`${API_BASE_URL}/api/productCategories`)
-          .then((response) => context.commit('changeCategoriesList', response.data.items)),
-        DEFAULT_API_TIMEOUT_LIMIT,
-      );
+      context.commit('changeLoadingCategories');
+      const query = () => axios.get(`${API_BASE_URL}/api/productCategories`)
+        .then((response) => {
+          context.commit('changeLoadingCategories');
+          context.commit('setLoadingCategoriesError', '');
+          context.commit('changeCategoriesList', response.data.items);
+        }).catch((e) => {
+          context.commit('changeLoadingCategories');
+          context.commit('setLoadingCategoriesError', e.message);
+        });
+      setTimeout(query, DEFAULT_API_TIMEOUT_LIMIT);
+      return query;
+    },
+    loadDeliveries(context) {
+      const req = () => axios.get(`${API_BASE_URL}/api/deliveries`)
+        .then((response) => {
+          context.commit('setDeliveries', response.data);
+          context.dispatch('loadPayments');
+        });
+      setTimeout(req);
+    },
+    loadPayments(context) {
+      const req = () => axios.get(`${API_BASE_URL}/api/payments`, {
+        params: { deliveryTypeId: context.state.deliveryMethod },
+      })
+        .then((response) => {
+          console.log(response);
+          context.commit('setPayments', response.data);
+        });
+      setTimeout(req);
+    },
+    loadOrderInfo(context, orderId) {
+      return axios.get(`${API_BASE_URL}/api/orders/${orderId}`, {
+        params: {
+          userAccessKey: context.state.userAccessKey,
+        },
+      }).then((response) => {
+        context.commit('updateOrderInfo', response.data);
+      });
     },
   },
   modules: {

@@ -52,6 +52,7 @@ export default {
       return `background-color: ${obj.color.code}`;
     },
     changeColor(color) {
+      this.currentProductData = color;
       this.currentColor = color.id;
     },
   },

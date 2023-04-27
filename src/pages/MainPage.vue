@@ -17,7 +17,9 @@
             <form-filter></form-filter>
         </aside>
         <section class="catalog">
-            <products-list :products="products"></products-list>
+            <div v-if="loadingProducts">Данные загружаются...</div>
+            <div v-else-if="loadingProductsError">Ошибка загрузки! {{ loadingProductsError }}</div>
+            <products-list :products="products" v-else ></products-list>
 
             <pagination-control :current="currentPage" :pages="pages"
                 v-if="pages > 1"></pagination-control>
@@ -33,9 +35,6 @@ import PaginationControl from '@/components/PaginationControl.vue';
 import ProductsList from '@/components/ProductsList.vue';
 
 export default {
-  data() {
-    return {};
-  },
   components: {
     FormFilter,
     PaginationControl,
@@ -55,6 +54,16 @@ export default {
     },
     pages() {
       return this.$store.state.totalPages;
+    },
+    loadingProducts: {
+      get() {
+        return this.$store.state.loadingProducts;
+      },
+    },
+    loadingProductsError: {
+      get() {
+        return this.$store.state.loadingProductsError;
+      },
     },
   },
   created() {

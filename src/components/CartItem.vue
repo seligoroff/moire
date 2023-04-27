@@ -19,7 +19,7 @@
     </span>
 
     <div class="product__counter form__counter">
-      <button type="button" aria-label="Убрать один товар">
+      <button type="button" aria-label="Убрать один товар" @click.prevent="reduce">
         <svg width="10" height="10" fill="currentColor">
           <use xlink:href="#icon-minus"></use>
         </svg>
@@ -27,7 +27,7 @@
 
         <label for="count"><input type="text" v-model="quantity"></label>
 
-      <button type="button" aria-label="Добавить один товар">
+      <button type="button" aria-label="Добавить один товар" @click.prevent="add">
         <svg width="10" height="10" fill="currentColor">
           <use xlink:href="#icon-plus"></use>
         </svg>
@@ -39,7 +39,7 @@
     </b>
 
     <button class="product__del button-del" type="button"
-          aria-label="Удалить товар из корзины">
+          aria-label="Удалить товар из корзины" @click.prevent="remove">
       <svg width="20" height="20" fill="currentColor">
         <use xlink:href="#icon-close"></use>
       </svg>
@@ -52,9 +52,33 @@ import numberFormat from '@/helpers/numberFormat';
 export default {
   props: ['item'],
   data() {
-    return {
-      quantity: this.item.quantity,
-    };
+    return {};
+  },
+  methods: {
+    reduce() {
+      if (this.quantity > 1) {
+        this.quantity -= 1;
+      }
+    },
+    add() {
+      this.quantity += 1;
+    },
+    remove() {
+      if (window.confirm('Вы уверены, что хотите удалить товар?')) {
+        this.$store.dispatch('removeCartItem', this.item.id);
+      }
+    },
+  },
+  computed: {
+    quantity: {
+      get() {
+        return this.item.quantity;
+      },
+      set(value) {
+        console.log(value);
+        this.$store.dispatch('updateCartItemAmount', { cartItem: this.item, quantity: value });
+      },
+    },
   },
   filters: {
     numberFormat,
