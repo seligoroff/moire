@@ -64,9 +64,7 @@ export default {
       this.quantity += 1;
     },
     remove() {
-      if (window.confirm('Вы уверены, что хотите удалить товар?')) {
-        this.$store.dispatch('removeCartItem', this.item.id);
-      }
+      this.$store.dispatch('removeCartItem', this.item.id);
     },
   },
   computed: {
