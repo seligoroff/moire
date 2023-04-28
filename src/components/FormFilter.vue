@@ -68,7 +68,8 @@
         <button class="filter__submit button button--primery" type="submit">
           Применить
         </button>
-        <button class="filter__reset button button--second" type="button" @click.prevent="reset">
+        <button class="filter__reset button button--second" type="button"
+            @click.prevent="reset" v-if="filterUsed">
           Сбросить
         </button>
     </form>
@@ -77,6 +78,7 @@
 export default {
   data() {
     return {
+      filterUsed: false,
       filters: {
         minPrice: 0,
         maxPrice: 0,
@@ -133,6 +135,7 @@ export default {
     filterProducts() {
       this.$store.commit('changeFilters', this.filters);
       this.$store.dispatch('loadProducts');
+      this.filterUsed = true;
     },
     reset() {
       this.filters.minPrice = 0;
@@ -141,6 +144,7 @@ export default {
       this.filters.materialIds = [];
       this.filters.seasonIds = [];
       this.filterProducts();
+      this.filterUsed = false;
     },
   },
   created() {

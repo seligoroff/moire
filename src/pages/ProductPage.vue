@@ -57,7 +57,8 @@
                   </svg>
                 </button>
 
-                  <label for="count"><input type="text" v-model="amount"></label>
+                  <label for="count"><input type="text" v-model.number="amount"
+                                            @change="changeAmount"></label>
 
                 <button type="button" aria-label="Добавить один товар" @click.prevent="add">
                   <svg width="12" height="12" fill="currentColor">
@@ -92,7 +93,8 @@
               <fieldset class="form__block">
                 <legend class="form__legend">Размер</legend>
                 <label class="form__label form__label--small form__label--select" for="category">
-                  <select class="form__select" type="text" v-model="currentSize">
+                  <select class="form__select" type="text" v-model="currentSize"
+                        @change="productAdded = false">
                     <option v-for="size in product.sizes"
                         :value="size.id" :key="size.id">
                         {{ size.title }}</option>
@@ -101,31 +103,16 @@
               </fieldset>
             </div>
 
-            <button class="item__button button button--primery" type="submit">
+            <button class="item__button button button--primery" type="submit"
+                v-if="parseInt(amount, 10) > 0">
               В корзину
             </button>
+            <p v-if="productAdded">Товар добавлен!</p>
           </form>
         </div>
       </div>
+      <product-info :materials="product.materials"></product-info>
 
-      <div class="item__desc">
-        <ul class="tabs">
-          <li class="tabs__item">
-            <a class="tabs__link tabs__link--current">
-              Информация о товаре
-            </a>
-          </li>
-          <li class="tabs__item">
-            <a class="tabs__link" href="#">
-              Доставка и возврат
-            </a>
-          </li>
-        </ul>
-
-        <div class="item__content">
-            {{ product.content }}
-        </div>
-      </div>
     </section>
   </main>
 </template>
@@ -133,11 +120,13 @@
 import axios from 'axios';
 import numberFormat from '@/helpers/numberFormat';
 import PlaceholderImage from '@/components/PlaceholderImage.vue';
+import ProductInfo from '@/components/ProductInfo.vue';
 import { API_BASE_URL, DEFAULT_API_TIMEOUT_LIMIT } from '@/config';
 
 export default {
   data() {
     return {
+      productAdded: false,
       loadingProduct: false,
       loadingProductError: '',
       product: null,
@@ -148,14 +137,21 @@ export default {
     };
   },
   methods: {
+    changeAmount() {
+      this.amount = parseInt(this.amount, 10) || 1;
+      console.log([this.amount, parseInt(this.amount, 10)]);
+    },
     addToCart() {
-      const data = {
-        productId: this.product.id,
-        colorId: this.currentColor,
-        sizeId: this.currentSize,
-        quantity: this.amount,
-      };
-      this.$store.dispatch('addProductToCart', data);
+      if (parseInt(this.amount, 10)) {
+        const data = {
+          productId: this.product.id,
+          colorId: this.currentColor,
+          sizeId: this.currentSize,
+          quantity: this.amount,
+        };
+        this.$store.dispatch('addProductToCart', data);
+        this.productAdded = true;
+      }
     },
     setProduct(product) {
       this.product = product;
@@ -177,9 +173,9 @@ export default {
       setTimeout(req, DEFAULT_API_TIMEOUT_LIMIT);
     },
     changeColor(color) {
-      console.log(color);
       this.currentColor = color.color.id;
       this.currentProductData = color;
+      this.productAdded = false;
     },
     reduce() {
       if (this.amount > 1) {
@@ -195,6 +191,7 @@ export default {
   },
   components: {
     PlaceholderImage,
+    ProductInfo,
   },
   created() {
     this.loadProduct();

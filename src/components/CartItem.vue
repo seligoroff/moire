@@ -5,7 +5,7 @@
           alt="Название товара" v-if="item.color.gallery">
     </div>
     <h3 class="product__title">
-      {{ item.product.title }}
+        {{ item.product.title }} <div>(размер {{ item.size.title }})</div>
     </h3>
     <p class="product__info product__info--color">
       Цвет:
